@@ -6,7 +6,7 @@ As a software engineer eager to expand my understanding of foundational programm
 
 The To-Do List Manager is a console application that allows users to create, view, update, and persist a list of tasks. It demonstrates essential C++ programming techniques and serves as a building block for more advanced applications involving file I/O and data structures.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](http://youtube.)
 
 ---
 
