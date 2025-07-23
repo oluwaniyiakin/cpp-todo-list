@@ -1,19 +1,20 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include "task.h"  // Include the Task class header
+#include "task.h"
 
 using namespace std;
 
 // Function declarations
 void showMenu();
-void addTask(vector<Task>& tasks);
-void viewTasks(const vector<Task>& tasks);
-void markTaskCompleted(vector<Task>& tasks);
-void saveTasks(const vector<Task>& tasks);
-void loadTasks(vector<Task>& tasks);
+void addTask(vector<Task*>& tasks);
+void viewTasks(const vector<Task*>& tasks);
+void markTaskCompleted(vector<Task*>& tasks);
+void saveTasks(const vector<Task*>& tasks);
+void loadTasks(vector<Task*>& tasks);
+void cleanupTasks(vector<Task*>& tasks);
 
-// Displays menu
+// Display menu
 void showMenu() {
     cout << "\n=== TO-DO LIST MENU ===\n";
     cout << "1. Add Task\n";
@@ -25,38 +26,39 @@ void showMenu() {
     cout << "Choose an option (1-6): ";
 }
 
-// Adds a task
-void addTask(vector<Task>& tasks) {
-    cout << "Enter task description: ";
-    cin.ignore();
+// Add task dynamically using `new`
+void addTask(vector<Task*>& tasks) {
+    cin.ignore(); // clear input buffer
     string desc;
+    cout << "Enter task description: ";
     getline(cin, desc);
-    Task t(desc);
+
+    Task* t = new Task(desc); // dynamic allocation
     tasks.push_back(t);
     cout << "Task added!\n";
 }
 
-// Displays all tasks
-void viewTasks(const vector<Task>& tasks) {
+// View tasks
+void viewTasks(const vector<Task*>& tasks) {
     if (tasks.empty()) {
         cout << "No tasks available.\n";
         return;
     }
 
     cout << "\nYour Tasks:\n";
-    for (size_t i = 0; i < tasks.size(); i++) {
-        cout << i + 1 << ". " << tasks[i].getDescription();
-        cout << (tasks[i].isCompleted() ? " [Completed]" : " [Pending]") << "\n";
+    for (size_t i = 0; i < tasks.size(); ++i) {
+        cout << i + 1 << ". ";
+        tasks[i]->display();  // virtual function call
     }
 }
 
-// Marks a task as completed
-void markTaskCompleted(vector<Task>& tasks) {
+// Mark task completed
+void markTaskCompleted(vector<Task*>& tasks) {
     viewTasks(tasks);
     if (tasks.empty()) return;
 
-    cout << "Enter task number to mark as completed: ";
     int index;
+    cout << "Enter task number to mark as completed: ";
     cin >> index;
 
     if (index < 1 || index > tasks.size()) {
@@ -64,48 +66,57 @@ void markTaskCompleted(vector<Task>& tasks) {
         return;
     }
 
-    tasks[index - 1].markCompleted();
+    tasks[index - 1]->markCompleted();
     cout << "Task marked as completed!\n";
 }
 
-// Saves tasks to file
-void saveTasks(const vector<Task>& tasks) {
+// Save tasks to file
+void saveTasks(const vector<Task*>& tasks) {
     ofstream file("tasks.txt");
     if (!file) {
         cout << "Error opening file for writing.\n";
         return;
     }
 
-    for (const Task& task : tasks) {
-        file << task.toString() << "\n";
+    for (const auto& task : tasks) {
+        file << task->toString() << endl;
     }
 
     file.close();
     cout << "Tasks saved to tasks.txt!\n";
 }
 
-// Loads tasks from file
-void loadTasks(vector<Task>& tasks) {
+// Load tasks from file using `new`
+void loadTasks(vector<Task*>& tasks) {
     ifstream file("tasks.txt");
     if (!file) {
         cout << "No saved file found.\n";
         return;
     }
 
-    tasks.clear();
+    // Clean up existing tasks
+    cleanupTasks(tasks);
+
     string line;
     while (getline(file, line)) {
-        Task t = Task::fromString(line);
-        tasks.push_back(t);
+        Task* t = Task::fromString(line); // create dynamically
+        if (t) tasks.push_back(t);
     }
 
     file.close();
     cout << "Tasks loaded from file!\n";
 }
 
-// Main driver function
+// Free dynamically allocated memory
+void cleanupTasks(vector<Task*>& tasks) {
+    for (auto task : tasks) {
+        delete task;
+    }
+    tasks.clear();
+}
+
 int main() {
-    vector<Task> tasks;
+    vector<Task*> tasks;
     int choice;
 
     cout << "Welcome to your C++ To-Do List Manager!\n";
@@ -115,28 +126,20 @@ int main() {
         cin >> choice;
 
         switch (choice) {
-            case 1:
-                addTask(tasks);
-                break;
-            case 2:
-                viewTasks(tasks);
-                break;
-            case 3:
-                markTaskCompleted(tasks);
-                break;
-            case 4:
-                saveTasks(tasks);
-                break;
-            case 5:
-                loadTasks(tasks);
-                break;
+            case 1: addTask(tasks); break;
+            case 2: viewTasks(tasks); break;
+            case 3: markTaskCompleted(tasks); break;
+            case 4: saveTasks(tasks); break;
+            case 5: loadTasks(tasks); break;
             case 6:
                 cout << "Goodbye!\n";
+                saveTasks(tasks);
                 break;
             default:
                 cout << "Invalid option. Try again.\n";
         }
     } while (choice != 6);
 
+    cleanupTasks(tasks);
     return 0;
 }

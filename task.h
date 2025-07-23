@@ -5,7 +5,7 @@
 #include <string>
 
 class Task {
-private:
+protected:
     std::string description;
     bool completed;
 
@@ -14,8 +14,20 @@ public:
     std::string getDescription() const;
     bool isCompleted() const;
     void markCompleted();
-    std::string toString() const;
+    virtual std::string toString() const; // virtual for polymorphism
     static Task fromString(std::string line);
+    virtual ~Task() {} // virtual destructor
+};
+
+// Derived class: ImportantTask
+class ImportantTask : public Task {
+private:
+    int priority;
+
+public:
+    ImportantTask(std::string desc, int priority);
+    int getPriority() const;
+    std::string toString() const override;
 };
 
 #endif
